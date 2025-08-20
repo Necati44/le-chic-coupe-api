@@ -4,12 +4,114 @@
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
+// prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+/// Rôles internes à l'app (pas exposée publiquement) :
+enum Role {
+  OWNER // gérant
+  STAFF // employé(e)
+  CUSTOMER
+}
+
+/// Statut rendez-vous
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+/// Jours semaines
+enum Weekday {
+  MON
+  TUE
+  WED
+  THU
+  FRI
+  SAT
+  SUN
+}
+
+model User {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  email     String  @unique
+  phone     String? @db.VarChar(32)
+  firstName String
+  lastName  String
+  role      Role    @default(CUSTOMER)
+
+  // relations
+  appointmentsAsCustomer Appointment[] @relation("CustomerAppointments")
+  appointmentsAsStaff    Appointment[] @relation("StaffAppointments")
+
+  // Option : salon unique MVP → on garde simple.
+  StaffAvailability StaffAvailability[]
+}
+
+model Service {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name        String
+  description String?
+  durationMin Int // durée en minutes
+  priceCents  Int // prix en centimes pour éviter les flottants
+
+  appointments Appointment[]
+
+  @@index([name])
+}
+
+model Appointment {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  startAt DateTime
+  endAt   DateTime
+  status  AppointmentStatus @default(PENDING)
+
+  // relations
+  serviceId String
+  service   Service @relation(fields: [serviceId], references: [id])
+
+  customerId String
+  customer   User   @relation("CustomerAppointments", fields: [customerId], references: [id])
+
+  staffId String? // optionnel : parfois pas encore assigné
+  staff   User?   @relation("StaffAppointments", fields: [staffId], references: [id])
+
+  // Index utiles pour recherche planning
+  @@index([startAt])
+  @@index([status])
+  @@index([customerId])
+  @@index([staffId])
+}
+
+/// Créneaux récurrents par membre du staff (dispos hebdo)
+model StaffAvailability {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  staffId String
+  staff   User   @relation(fields: [staffId], references: [id])
+
+  day       Weekday
+  startTime String // "09:00" (simple pour MVP)
+  endTime   String // "18:00"
+
+  @@unique([staffId, day, startTime, endTime]) // éviter doublons
 }
