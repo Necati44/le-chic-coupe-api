@@ -6,6 +6,7 @@ import { UsersModule } from './users/users.module';
 import { AppointmentsModule } from './appointments/appointments.module';
 import { ServicesModule } from './services/services.module';
 import { StaffAvailabilitiesModule } from './staff-availabilities/staff-availabilities.module';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
@@ -14,6 +15,10 @@ import { StaffAvailabilitiesModule } from './staff-availabilities/staff-availabi
     AppointmentsModule,
     ServicesModule,
     StaffAvailabilitiesModule,
+    ThrottlerModule.forRoot([{
+      ttl: 60, // fenêtre 60s
+      limit: 100, // 100 requêtes / minute / IP
+    }]),
   ],
   controllers: [AppController],
   providers: [AppService],
