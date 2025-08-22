@@ -12,6 +12,8 @@ import * as dotenv from 'dotenv';
 import { DevHelperModule } from './dev-helper/dev-helper.module';
 import { AuthModule } from './auth/auth.module';
 import { PublicAvailabilitiesModule } from './public-availabilities/public-availabilities.module';
+import { APP_GUARD } from '@nestjs/core';
+import { RolesGuard } from './auth/guards/roles.guard';
 dotenv.config();
 
 @Module({
@@ -32,6 +34,11 @@ dotenv.config();
     ...(process.env.NODE_ENV !== 'dev' ? [DevHelperModule] : []),
   ],
   controllers: [AppController, AuthController],
-  providers: [AppService],
+  providers: [ AppService,
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
+  ],
 })
 export class AppModule {}
