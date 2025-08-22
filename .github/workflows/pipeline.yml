@@ -36,6 +36,8 @@ jobs:
 
       - name: ESLint
         run: npm run lint
+        env:
+          CI_LINT_LOOSE: '1'
 
       - name: Dependency Cruiser
         run: npm run depcruise

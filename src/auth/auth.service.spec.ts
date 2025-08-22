@@ -23,7 +23,7 @@ describe('AuthService (unit)', () => {
 
   beforeEach(() => {
     jest.spyOn(console, 'log').mockImplementation(() => {});
-    
+
     users = {
       findByFirebaseUid: jest.fn(),
     } as unknown as jest.Mocked<UsersService>;
@@ -34,8 +34,12 @@ describe('AuthService (unit)', () => {
   });
 
   it('rejette si idToken est manquant/vidé', async () => {
-    await expect(service.loginWithIdToken('')).rejects.toBeInstanceOf(BadRequestException);
-    await expect(service.loginWithIdToken('  ')).rejects.toBeInstanceOf(BadRequestException);
+    await expect(service.loginWithIdToken('')).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+    await expect(service.loginWithIdToken('  ')).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
   });
 
   it('retourne {authenticated:false, reason:no_email} si le token n’a pas d’email', async () => {
@@ -48,16 +52,26 @@ describe('AuthService (unit)', () => {
   });
 
   it('retourne needsProfile=false + user si déjà existant', async () => {
-    verifyIdTokenMock.mockResolvedValueOnce({ uid: 'u1', email: 'a@b.com', name: 'Alice', picture: 'x' });
+    verifyIdTokenMock.mockResolvedValueOnce({
+      uid: 'u1',
+      email: 'a@b.com',
+      name: 'Alice',
+      picture: 'x',
+    });
     createSessionCookieMock.mockResolvedValueOnce('sess-cookie');
     users.findByFirebaseUid.mockResolvedValueOnce({
-      id: 'db1', email: 'a@b.com', firstName: 'Alice', lastName: 'Doe',
+      id: 'db1',
+      email: 'a@b.com',
+      firstName: 'Alice',
+      lastName: 'Doe',
     } as any);
 
     const out = await service.loginWithIdToken('t');
 
     expect(verifyIdTokenMock).toHaveBeenCalledWith('t', true);
-    expect(createSessionCookieMock).toHaveBeenCalledWith('t', { expiresIn: 1000 * 60 * 60 * 24 * 7 });
+    expect(createSessionCookieMock).toHaveBeenCalledWith('t', {
+      expiresIn: 1000 * 60 * 60 * 24 * 7,
+    });
     expect(users.findByFirebaseUid).toHaveBeenCalledWith('u1');
 
     expect(out.authenticated).toBe(true);
@@ -73,7 +87,12 @@ describe('AuthService (unit)', () => {
   });
 
   it('retourne needsProfile=true + prefill si inexistant', async () => {
-    verifyIdTokenMock.mockResolvedValueOnce({ uid: 'u2', email: 'z@y.com', name: 'Zed', picture: 'p' });
+    verifyIdTokenMock.mockResolvedValueOnce({
+      uid: 'u2',
+      email: 'z@y.com',
+      name: 'Zed',
+      picture: 'p',
+    });
     createSessionCookieMock.mockResolvedValueOnce('sess2');
     users.findByFirebaseUid.mockResolvedValueOnce(null);
 

@@ -20,5 +20,5 @@ export class CreateAppointmentDto {
 
   @IsOptional()
   @IsEnum(AppointmentStatus)
-  status?: AppointmentStatus; // défaut côté Prisma: PENDING
+  status?: AppointmentStatus;
 }

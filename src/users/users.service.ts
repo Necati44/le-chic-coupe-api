@@ -1,9 +1,11 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
-import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { AppointmentStatus, Role } from '@prisma/client';
-import { DecodedIdToken } from 'firebase-admin/auth';
+import { AppointmentStatus, User } from '@prisma/client';
 import { FinalizeProfileDto } from 'src/auth/dto/finalize-profile.dto';
 
 @Injectable()
@@ -50,26 +52,26 @@ export class UsersService {
 
     return this.prisma.client.$transaction(async (tx) => {
       // Annuler RDV futurs où il est staff
-      const staffCancelled = await tx.appointment.updateMany({
+      await tx.appointment.updateMany({
         where: {
           staffId: id,
           startAt: { gt: now },
-          status: { not: AppointmentStatus.CANCELLED as any },
+          status: { not: AppointmentStatus.CANCELLED },
         },
         data: {
-          status: AppointmentStatus.CANCELLED as any,
+          status: AppointmentStatus.CANCELLED,
         },
       });
 
       // Annuler RDV futurs où il est client
-      const custCancelled = await tx.appointment.updateMany({
+      await tx.appointment.updateMany({
         where: {
           customerId: id,
           startAt: { gt: now },
-          status: { not: AppointmentStatus.CANCELLED as any },
+          status: { not: AppointmentStatus.CANCELLED },
         },
         data: {
-          status: AppointmentStatus.CANCELLED as any,
+          status: AppointmentStatus.CANCELLED,
         },
       });
 
@@ -84,16 +86,21 @@ export class UsersService {
     return this.prisma.client.user.findUnique({ where: { firebaseUid } });
   }
 
-  async createFromFirebase(firebaseUid: string, emailFromToken: string, dto: FinalizeProfileDto) {
+  async createFromFirebase(
+    firebaseUid: string,
+    emailFromToken: string,
+    dto: FinalizeProfileDto,
+  ) {
     const email = emailFromToken;
 
     // Éviter un doublon email≠uid (cas rare mais mieux d’être explicite)
-    const existingByEmail = await this.prisma.client.user.findUnique({ where: { email } });
+    const existingByEmail: User | null =
+      await this.prisma.client.user.findUnique({ where: { email } });
     if (existingByEmail && existingByEmail.firebaseUid !== firebaseUid) {
       throw new ConflictException('A user with this email already exists.');
     }
 
-    return this.prisma.client.user.create({
+    const created: User = await this.prisma.client.user.create({
       data: {
         firebaseUid,
         email,
@@ -101,6 +108,6 @@ export class UsersService {
         lastName: dto.lastName,
       },
     });
+    return created;
   }
-
 }

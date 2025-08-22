@@ -30,7 +30,7 @@ describe('StaffAvailabilitiesService (unit)', () => {
 
   beforeEach(() => {
     jest.spyOn(console, 'log').mockImplementation(() => {});
-    
+
     prisma = makePrismaMock();
     service = new StaffAvailabilitiesService(prisma as any);
     jest.spyOn(console, 'log').mockImplementation(() => {}); // coupe les logs JSON
@@ -43,7 +43,12 @@ describe('StaffAvailabilitiesService (unit)', () => {
   describe('create', () => {
     it('rejette si startTime >= endTime', async () => {
       await expect(
-        service.create({ staffId: 's1', day: 'MON', startTime: '10:00', endTime: '10:00' } as any),
+        service.create({
+          staffId: 's1',
+          day: 'MON',
+          startTime: '10:00',
+          endTime: '10:00',
+        } as any),
       ).rejects.toBeInstanceOf(BadRequestException);
     });
 
@@ -55,17 +60,34 @@ describe('StaffAvailabilitiesService (unit)', () => {
       });
 
       await expect(
-        service.create({ staffId: 's1', day: 'MON', startTime: '10:00', endTime: '11:00' } as any),
+        service.create({
+          staffId: 's1',
+          day: 'MON',
+          startTime: '10:00',
+          endTime: '11:00',
+        } as any),
       ).rejects.toBeInstanceOf(BadRequestException);
     });
 
     it('créé la dispo si ok', async () => {
       prisma.client.staffAvailability.findFirst.mockResolvedValueOnce(null);
-      prisma.client.staffAvailability.create.mockResolvedValueOnce({ id: 'a1' });
+      prisma.client.staffAvailability.create.mockResolvedValueOnce({
+        id: 'a1',
+      });
 
-      const out = await service.create({ staffId: 's1', day: 'MON', startTime: '09:00', endTime: '10:00' } as any);
+      const out = await service.create({
+        staffId: 's1',
+        day: 'MON',
+        startTime: '09:00',
+        endTime: '10:00',
+      } as any);
       expect(prisma.client.staffAvailability.create).toHaveBeenCalledWith({
-        data: { staffId: 's1', day: 'MON', startTime: '09:00', endTime: '10:00' },
+        data: {
+          staffId: 's1',
+          day: 'MON',
+          startTime: '09:00',
+          endTime: '10:00',
+        },
       });
       expect(out).toEqual({ id: 'a1' });
     });
@@ -73,7 +95,9 @@ describe('StaffAvailabilitiesService (unit)', () => {
 
   describe('findAll', () => {
     it('retourne items/total (tri et pagination) via transaction', async () => {
-      prisma.client.staffAvailability.findMany.mockResolvedValueOnce([{ id: 'x' }]);
+      prisma.client.staffAvailability.findMany.mockResolvedValueOnce([
+        { id: 'x' },
+      ]);
       prisma.client.staffAvailability.count.mockResolvedValueOnce(1);
 
       const q: any = { staffId: 's1', day: 'TUE', skip: 5, take: 10 };
@@ -85,31 +109,46 @@ describe('StaffAvailabilitiesService (unit)', () => {
         take: 10,
         orderBy: [{ staffId: 'asc' }, { day: 'asc' }, { startTime: 'asc' }],
       });
-      expect(prisma.client.staffAvailability.count).toHaveBeenCalledWith({ where: { staffId: 's1', day: 'TUE' } });
+      expect(prisma.client.staffAvailability.count).toHaveBeenCalledWith({
+        where: { staffId: 's1', day: 'TUE' },
+      });
       expect(prisma.client.$transaction).toHaveBeenCalledTimes(1);
-      expect(out).toEqual({ items: [{ id: 'x' }], total: 1, skip: 5, take: 10 });
+      expect(out).toEqual({
+        items: [{ id: 'x' }],
+        total: 1,
+        skip: 5,
+        take: 10,
+      });
     });
   });
 
   describe('findOne', () => {
     it('retourne la dispo si trouvée', async () => {
-      prisma.client.staffAvailability.findUnique.mockResolvedValueOnce({ id: 'd1' });
+      prisma.client.staffAvailability.findUnique.mockResolvedValueOnce({
+        id: 'd1',
+      });
 
       const out = await service.findOne('d1');
-      expect(prisma.client.staffAvailability.findUnique).toHaveBeenCalledWith({ where: { id: 'd1' } });
+      expect(prisma.client.staffAvailability.findUnique).toHaveBeenCalledWith({
+        where: { id: 'd1' },
+      });
       expect(out).toEqual({ id: 'd1' });
     });
 
     it('jette NotFound si absente', async () => {
       prisma.client.staffAvailability.findUnique.mockResolvedValueOnce(null);
-      await expect(service.findOne('missing')).rejects.toBeInstanceOf(NotFoundException);
+      await expect(service.findOne('missing')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
     });
   });
 
   describe('update', () => {
     it('jette NotFound si la ressource n’existe pas', async () => {
       prisma.client.staffAvailability.findUnique.mockResolvedValueOnce(null);
-      await expect(service.update('x', {} as any)).rejects.toBeInstanceOf(NotFoundException);
+      await expect(service.update('x', {} as any)).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
     });
 
     it('rejette si startTime >= endTime (après merge current/dto)', async () => {
@@ -146,33 +185,49 @@ describe('StaffAvailabilitiesService (unit)', () => {
     });
 
     it('met à jour avec merge des champs implicites ok', async () => {
-      prisma.client.staffAvailability.findUnique
-        .mockResolvedValueOnce({
-          id: 'd1',
-          staffId: 's1',
-          day: 'THU',
-          startTime: '09:00',
-          endTime: '10:00',
-        });
+      prisma.client.staffAvailability.findUnique.mockResolvedValueOnce({
+        id: 'd1',
+        staffId: 's1',
+        day: 'THU',
+        startTime: '09:00',
+        endTime: '10:00',
+      });
 
       prisma.client.staffAvailability.findFirst.mockResolvedValueOnce(null);
-      prisma.client.staffAvailability.update.mockResolvedValueOnce({ id: 'd1', day: 'THU', startTime: '09:30', endTime: '10:30' });
+      prisma.client.staffAvailability.update.mockResolvedValueOnce({
+        id: 'd1',
+        day: 'THU',
+        startTime: '09:30',
+        endTime: '10:30',
+      });
 
-      const out = await service.update('d1', { startTime: '09:30', endTime: '10:30' } as any);
+      const out = await service.update('d1', {
+        startTime: '09:30',
+        endTime: '10:30',
+      } as any);
 
       expect(prisma.client.staffAvailability.update).toHaveBeenCalledWith({
         where: { id: 'd1' },
         data: { startTime: '09:30', endTime: '10:30', day: 'THU' },
       });
-      expect(out).toEqual({ id: 'd1', day: 'THU', startTime: '09:30', endTime: '10:30' });
+      expect(out).toEqual({
+        id: 'd1',
+        day: 'THU',
+        startTime: '09:30',
+        endTime: '10:30',
+      });
     });
   });
 
   describe('remove', () => {
     it('supprime et renvoie {id, deleted:true}', async () => {
-      prisma.client.staffAvailability.delete.mockResolvedValueOnce({ id: 'd1' });
+      prisma.client.staffAvailability.delete.mockResolvedValueOnce({
+        id: 'd1',
+      });
       const out = await service.remove('d1');
-      expect(prisma.client.staffAvailability.delete).toHaveBeenCalledWith({ where: { id: 'd1' } });
+      expect(prisma.client.staffAvailability.delete).toHaveBeenCalledWith({
+        where: { id: 'd1' },
+      });
       expect(out).toEqual({ id: 'd1', deleted: true });
     });
 
@@ -181,7 +236,9 @@ describe('StaffAvailabilitiesService (unit)', () => {
       err.code = 'P2025';
       prisma.client.staffAvailability.delete.mockRejectedValueOnce(err);
 
-      await expect(service.remove('x')).rejects.toBeInstanceOf(NotFoundException);
+      await expect(service.remove('x')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
     });
   });
 
@@ -202,7 +259,9 @@ describe('StaffAvailabilitiesService (unit)', () => {
       await expect(
         service.bulkUpsert({
           staffId: 's1',
-          slots: [{ staffId: 's1', day: 'MON', startTime: '10:00', endTime: '10:00' }],
+          slots: [
+            { staffId: 's1', day: 'MON', startTime: '10:00', endTime: '10:00' },
+          ],
         } as any),
       ).rejects.toBeInstanceOf(BadRequestException);
     });
@@ -236,7 +295,9 @@ describe('StaffAvailabilitiesService (unit)', () => {
       const out = await service.bulkUpsert(dto);
 
       expect(prisma.client.$transaction).toHaveBeenCalledTimes(1);
-      expect(prisma.client.staffAvailability.deleteMany).toHaveBeenCalledWith({ where: { staffId: 's1' } });
+      expect(prisma.client.staffAvailability.deleteMany).toHaveBeenCalledWith({
+        where: { staffId: 's1' },
+      });
       expect(prisma.client.staffAvailability.createMany).toHaveBeenCalledWith({
         data: [
           { staffId: 's1', day: 'MON', startTime: '09:00', endTime: '10:00' },
@@ -257,7 +318,9 @@ describe('StaffAvailabilitiesService (unit)', () => {
     it('si slots vides: deleteMany puis [] sans createMany/findMany', async () => {
       const out = await service.bulkUpsert({ staffId: 's1', slots: [] } as any);
 
-      expect(prisma.client.staffAvailability.deleteMany).toHaveBeenCalledWith({ where: { staffId: 's1' } });
+      expect(prisma.client.staffAvailability.deleteMany).toHaveBeenCalledWith({
+        where: { staffId: 's1' },
+      });
       expect(prisma.client.staffAvailability.createMany).not.toHaveBeenCalled();
       expect(prisma.client.staffAvailability.findMany).not.toHaveBeenCalled();
       expect(out).toEqual([]);

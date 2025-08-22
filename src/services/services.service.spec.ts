@@ -27,7 +27,7 @@ describe('ServicesService (unit)', () => {
 
   beforeEach(() => {
     jest.spyOn(console, 'log').mockImplementation(() => {});
-    
+
     prisma = makePrismaMock();
     service = new ServicesService(prisma as any);
     jest.spyOn(console, 'log').mockImplementation(() => {}); // coupe le bruit des logs JSON
@@ -40,7 +40,12 @@ describe('ServicesService (unit)', () => {
   describe('create', () => {
     it('crée un service', async () => {
       prisma.client.service.create.mockResolvedValueOnce({ id: 'svc1' });
-      const dto: any = { name: 'Coupe', description: null, durationMin: 30, priceCents: 2500 };
+      const dto: any = {
+        name: 'Coupe',
+        description: null,
+        durationMin: 30,
+        priceCents: 2500,
+      };
       const out = await service.create(dto);
       expect(prisma.client.service.create).toHaveBeenCalledWith({ data: dto });
       expect(out).toEqual({ id: 'svc1' });
@@ -53,7 +58,13 @@ describe('ServicesService (unit)', () => {
       prisma.client.service.findMany.mockResolvedValueOnce(items);
       prisma.client.service.count.mockResolvedValueOnce(42);
 
-      const q: any = { search: 'cou', skip: 5, take: 10, orderBy: 'name', orderDir: 'asc' };
+      const q: any = {
+        search: 'cou',
+        skip: 5,
+        take: 10,
+        orderBy: 'name',
+        orderDir: 'asc',
+      };
       const out = await service.findAll(q);
 
       expect(prisma.client.service.findMany).toHaveBeenCalledWith({
@@ -74,7 +85,12 @@ describe('ServicesService (unit)', () => {
       prisma.client.service.findMany.mockResolvedValueOnce(items);
       prisma.client.service.count.mockResolvedValueOnce(0);
 
-      const q: any = { skip: 0, take: 20, orderBy: 'priceCents', orderDir: 'desc' };
+      const q: any = {
+        skip: 0,
+        take: 20,
+        orderBy: 'priceCents',
+        orderDir: 'desc',
+      };
       const out = await service.findAll(q);
 
       expect(prisma.client.service.findMany).toHaveBeenCalledWith({
@@ -83,7 +99,9 @@ describe('ServicesService (unit)', () => {
         take: 20,
         orderBy: { priceCents: 'desc' },
       });
-      expect(prisma.client.service.count).toHaveBeenCalledWith({ where: undefined });
+      expect(prisma.client.service.count).toHaveBeenCalledWith({
+        where: undefined,
+      });
       expect(out).toEqual({ items: [], total: 0, skip: 0, take: 20 });
     });
   });
@@ -92,22 +110,32 @@ describe('ServicesService (unit)', () => {
     it('retourne le service si trouvé', async () => {
       prisma.client.service.findUnique.mockResolvedValueOnce({ id: 's1' });
       const out = await service.findOne('s1');
-      expect(prisma.client.service.findUnique).toHaveBeenCalledWith({ where: { id: 's1' } });
+      expect(prisma.client.service.findUnique).toHaveBeenCalledWith({
+        where: { id: 's1' },
+      });
       expect(out).toEqual({ id: 's1' });
     });
 
     it('jette NotFound si inexistant', async () => {
       prisma.client.service.findUnique.mockResolvedValueOnce(null);
-      await expect(service.findOne('missing')).rejects.toBeInstanceOf(NotFoundException);
+      await expect(service.findOne('missing')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
     });
   });
 
   describe('update', () => {
     it('met à jour un service', async () => {
-      prisma.client.service.update.mockResolvedValueOnce({ id: 's1', name: 'Nouveau' });
+      prisma.client.service.update.mockResolvedValueOnce({
+        id: 's1',
+        name: 'Nouveau',
+      });
       const dto: any = { name: 'Nouveau' };
       const out = await service.update('s1', dto);
-      expect(prisma.client.service.update).toHaveBeenCalledWith({ where: { id: 's1' }, data: dto });
+      expect(prisma.client.service.update).toHaveBeenCalledWith({
+        where: { id: 's1' },
+        data: dto,
+      });
       expect(out).toEqual({ id: 's1', name: 'Nouveau' });
     });
   });
@@ -116,7 +144,9 @@ describe('ServicesService (unit)', () => {
     it('supprime et renvoie {id, deleted:true}', async () => {
       prisma.client.service.delete.mockResolvedValueOnce({ id: 's1' });
       const out = await service.remove('s1');
-      expect(prisma.client.service.delete).toHaveBeenCalledWith({ where: { id: 's1' } });
+      expect(prisma.client.service.delete).toHaveBeenCalledWith({
+        where: { id: 's1' },
+      });
       expect(out).toEqual({ id: 's1', deleted: true });
     });
   });

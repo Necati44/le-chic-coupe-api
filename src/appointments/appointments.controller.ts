@@ -1,5 +1,15 @@
 import {
-  Body, Controller, Delete, ForbiddenException, Get, Param, Patch, Post, Query, Req, UseGuards
+  Body,
+  Controller,
+  Delete,
+  ForbiddenException,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
@@ -24,7 +34,11 @@ export class AppointmentsController {
     if (user.role === Role.CUSTOMER) {
       (dto as any).customerId = user.id;
     }
-    logInfo('appointments.create', { byUserId: user.id, role: user.role, dtoKeys: Object.keys(dto || {}) });
+    logInfo('appointments.create', {
+      byUserId: user.id,
+      role: user.role,
+      dtoKeys: Object.keys(dto || {}),
+    });
     return this.appointmentsService.create(dto);
   }
 
@@ -33,7 +47,11 @@ export class AppointmentsController {
   @Get()
   async list(@Query() q: ListAppointmentsDto, @Req() req: any) {
     const user = req.appUser;
-    logInfo('appointments.list', { byUserId: user.id, role: user.role, queryKeys: Object.keys(q || {}) });
+    logInfo('appointments.list', {
+      byUserId: user.id,
+      role: user.role,
+      queryKeys: Object.keys(q || {}),
+    });
     return this.appointmentsService.findMany(q);
   }
 
@@ -46,20 +64,34 @@ export class AppointmentsController {
     if (user.role === Role.CUSTOMER && appt.customerId !== user.id) {
       throw new ForbiddenException('insufficient_role_or_not_owner');
     }
-    logInfo('appointments.get', { byUserId: user.id, role: user.role, apptId: id, customerId: appt.customerId });
+    logInfo('appointments.get', {
+      byUserId: user.id,
+      role: user.role,
+      apptId: id,
+      customerId: appt.customerId,
+    });
     return appt;
   }
 
   @UseGuards(RolesGuard)
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() dto: UpdateAppointmentDto, @Req() req: any) {
+  async update(
+    @Param('id') id: string,
+    @Body() dto: UpdateAppointmentDto,
+    @Req() req: any,
+  ) {
     const user = req.appUser;
     const appt = await this.appointmentsService.findOne(id);
     // CLIENT : peut modifier seulement ses RDV
     if (user.role === Role.CUSTOMER && appt.customerId !== user.id) {
       throw new ForbiddenException('insufficient_role_or_not_owner');
     }
-    logInfo('appointments.update', { byUserId: user.id, role: user.role, apptId: id, fields: Object.keys(dto || {}) });
+    logInfo('appointments.update', {
+      byUserId: user.id,
+      role: user.role,
+      apptId: id,
+      fields: Object.keys(dto || {}),
+    });
     return this.appointmentsService.update(id, dto);
   }
 
@@ -72,7 +104,11 @@ export class AppointmentsController {
     if (user.role === Role.CUSTOMER && appt.customerId !== user.id) {
       throw new ForbiddenException('insufficient_role_or_not_owner');
     }
-    logInfo('appointments.cancel', { byUserId: user.id, role: user.role, apptId: id });
+    logInfo('appointments.cancel', {
+      byUserId: user.id,
+      role: user.role,
+      apptId: id,
+    });
     return this.appointmentsService.cancel(id);
   }
 
@@ -81,7 +117,11 @@ export class AppointmentsController {
   @Delete(':id')
   async remove(@Param('id') id: string, @Req() req: any) {
     const user = req.appUser;
-    logInfo('appointments.remove', { byUserId: user.id, role: user.role, apptId: id });
+    logInfo('appointments.remove', {
+      byUserId: user.id,
+      role: user.role,
+      apptId: id,
+    });
     return this.appointmentsService.remove(id);
   }
 }

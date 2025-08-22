@@ -1,6 +1,10 @@
 type LogLevel = 'info' | 'warn' | 'error';
 
-export function log(level: LogLevel, message: string, meta: Record<string, any> = {}) {
+export function log(
+  level: LogLevel,
+  message: string,
+  meta: Record<string, any> = {},
+) {
   const line = {
     level,
     ts: new Date().toISOString(),
@@ -11,6 +15,9 @@ export function log(level: LogLevel, message: string, meta: Record<string, any> 
   console.log(JSON.stringify(line));
 }
 
-export const logInfo  = (msg: string, meta?: Record<string, any>) => log('info', msg, meta);
-export const logWarn  = (msg: string, meta?: Record<string, any>) => log('warn', msg, meta);
-export const logError = (msg: string, meta?: Record<string, any>) => log('error', msg, meta);
+export const logInfo = (msg: string, meta?: Record<string, any>) =>
+  log('info', msg, meta);
+export const logWarn = (msg: string, meta?: Record<string, any>) =>
+  log('warn', msg, meta);
+export const logError = (msg: string, meta?: Record<string, any>) =>
+  log('error', msg, meta);

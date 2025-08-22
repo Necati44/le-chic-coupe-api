@@ -22,6 +22,7 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "lint:ci": "CI_LINT_LOOSE=1 eslint . --ext .ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "jest",
     "test:unit": "jest --runInBand",

@@ -8,7 +8,7 @@ describe('ServicesController (unit)', () => {
 
   beforeEach(() => {
     jest.spyOn(console, 'log').mockImplementation(() => {});
-    
+
     svc = {
       create: jest.fn(),
       findAll: jest.fn(),
@@ -26,8 +26,19 @@ describe('ServicesController (unit)', () => {
 
   describe('findAll (PUBLIC)', () => {
     it('passe la query au service', async () => {
-      const q: any = { search: 'cou', skip: 0, take: 10, orderBy: 'name', orderDir: 'asc' };
-      svc.findAll.mockResolvedValueOnce({ items: [], total: 0, skip: 0, take: 10 });
+      const q: any = {
+        search: 'cou',
+        skip: 0,
+        take: 10,
+        orderBy: 'name',
+        orderDir: 'asc',
+      };
+      svc.findAll.mockResolvedValueOnce({
+        items: [],
+        total: 0,
+        skip: 0,
+        take: 10,
+      });
 
       const out = await controller.findAll(q);
 
@@ -48,7 +59,12 @@ describe('ServicesController (unit)', () => {
   describe('create (OWNER/STAFF)', () => {
     it('appelle le service avec le dto', async () => {
       const req: any = { appUser: { id: 'u-staff', role: Role.STAFF } };
-      const dto: any = { name: 'Brushing', description: null, durationMin: 45, priceCents: 3000 };
+      const dto: any = {
+        name: 'Brushing',
+        description: null,
+        durationMin: 45,
+        priceCents: 3000,
+      };
       svc.create.mockResolvedValueOnce({ id: 's2' });
 
       const out = await controller.create(dto, req);

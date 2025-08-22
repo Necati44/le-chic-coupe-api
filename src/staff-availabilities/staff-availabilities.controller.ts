@@ -1,5 +1,16 @@
 import {
-  Body, Controller, Delete, ForbiddenException, Get, Param, Patch, Post, Put, Query, Req, UseGuards,
+  Body,
+  Controller,
+  Delete,
+  ForbiddenException,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Put,
+  Query,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { StaffAvailabilitiesService } from './staff-availabilities.service';
 import { CreateStaffAvailabilityDto } from './dto/create-staff-availability.dto';
@@ -27,7 +38,11 @@ export class StaffAvailabilityController {
     if (user.role === Role.STAFF) {
       (dto as any).staffId = user.id;
     }
-    logInfo('staffAvailability.create', { byUserId: user.id, role: user.role, dtoKeys: Object.keys(dto || {}) });
+    logInfo('staffAvailability.create', {
+      byUserId: user.id,
+      role: user.role,
+      dtoKeys: Object.keys(dto || {}),
+    });
     return this.service.create(dto);
   }
 
@@ -37,7 +52,11 @@ export class StaffAvailabilityController {
     const user = req.appUser;
     // Option: si role STAFF, limiter par défaut à ses dispos (décommente si tu veux)
     // if (user.role === Role.STAFF) (q as any).staffId = user.id;
-    logInfo('staffAvailability.findAll', { byUserId: user.id, role: user.role, queryKeys: Object.keys(q || {}) });
+    logInfo('staffAvailability.findAll', {
+      byUserId: user.id,
+      role: user.role,
+      queryKeys: Object.keys(q || {}),
+    });
     return this.service.findAll(q);
   }
 
@@ -48,22 +67,40 @@ export class StaffAvailabilityController {
     if (user.role === Role.STAFF && avail.staffId !== user.id) {
       throw new ForbiddenException('not_owner_of_availability');
     }
-    logInfo('staffAvailability.findOne', { byUserId: user.id, role: user.role, availabilityId: id, staffId: avail.staffId });
+    logInfo('staffAvailability.findOne', {
+      byUserId: user.id,
+      role: user.role,
+      availabilityId: id,
+      staffId: avail.staffId,
+    });
     return avail;
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() dto: UpdateStaffAvailabilityDto, @Req() req: any) {
+  async update(
+    @Param('id') id: string,
+    @Body() dto: UpdateStaffAvailabilityDto,
+    @Req() req: any,
+  ) {
     const user = req.appUser;
     const avail = await this.service.findOne(id);
     if (user.role === Role.STAFF && avail.staffId !== user.id) {
       throw new ForbiddenException('not_owner_of_availability');
     }
     // empêcher un STAFF de changer le staffId de la ressource
-    if (user.role === Role.STAFF && (dto as any).staffId && (dto as any).staffId !== user.id) {
+    if (
+      user.role === Role.STAFF &&
+      (dto as any).staffId &&
+      (dto as any).staffId !== user.id
+    ) {
       throw new ForbiddenException('cannot_reassign_staffId');
     }
-    logInfo('staffAvailability.update', { byUserId: user.id, role: user.role, availabilityId: id, fields: Object.keys(dto || {}) });
+    logInfo('staffAvailability.update', {
+      byUserId: user.id,
+      role: user.role,
+      availabilityId: id,
+      fields: Object.keys(dto || {}),
+    });
     return this.service.update(id, dto);
   }
 
@@ -74,13 +111,20 @@ export class StaffAvailabilityController {
     if (user.role === Role.STAFF && avail.staffId !== user.id) {
       throw new ForbiddenException('not_owner_of_availability');
     }
-    logInfo('staffAvailability.remove', { byUserId: user.id, role: user.role, availabilityId: id });
+    logInfo('staffAvailability.remove', {
+      byUserId: user.id,
+      role: user.role,
+      availabilityId: id,
+    });
     return this.service.remove(id);
   }
 
   /** Remplacement complet des dispos d’un staff */
   @Put('bulk')
-  async bulkUpsert(@Body() dto: BulkUpsertStaffAvailabilityDto, @Req() req: any) {
+  async bulkUpsert(
+    @Body() dto: BulkUpsertStaffAvailabilityDto,
+    @Req() req: any,
+  ) {
     const user = req.appUser;
 
     // STAFF: bulk uniquement sur lui-même (force aussi les slots)
@@ -101,5 +145,4 @@ export class StaffAvailabilityController {
 
     return this.service.bulkUpsert(normalized);
   }
-
 }

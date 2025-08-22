@@ -12,7 +12,7 @@ function makePrismaMock() {
     appointment: {
       updateMany: jest.fn(),
     },
-    $transaction: jest.fn(async (cb: any) => cb(client)),
+    $transaction: jest.fn((cb: any) => cb(client)),
   };
   return { client };
 }
@@ -35,7 +35,7 @@ describe('UsersService (unit)', () => {
   });
 
   describe('createFromFirebase', () => {
-    it("crée l’utilisateur (email pris depuis le TOKEN — dto ignoré pour sécurité)", async () => {
+    it('crée l’utilisateur (email pris depuis le TOKEN — dto ignoré pour sécurité)', async () => {
       prisma.client.user.findUnique.mockResolvedValueOnce(null);
       prisma.client.user.create.mockResolvedValueOnce({
         id: 'u1',
@@ -45,8 +45,16 @@ describe('UsersService (unit)', () => {
         lastName: 'B',
       });
 
-      const dto = { firstName: 'A', lastName: 'B', email: 'dto@example.com' } as any;
-      const created = await service.createFromFirebase('uid-123', 'token@example.com', dto);
+      const dto = {
+        firstName: 'A',
+        lastName: 'B',
+        email: 'dto@example.com',
+      } as any;
+      const created = await service.createFromFirebase(
+        'uid-123',
+        'token@example.com',
+        dto,
+      );
 
       expect(prisma.client.user.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
@@ -77,7 +85,10 @@ describe('UsersService (unit)', () => {
         .mockResolvedValueOnce({ id: 'other', firebaseUid: 'uid-OTHER' });
 
       await expect(
-        service.createFromFirebase('uid-123', 'taken@example.com', { firstName: 'A', lastName: 'B' } as any),
+        service.createFromFirebase('uid-123', 'taken@example.com', {
+          firstName: 'A',
+          lastName: 'B',
+        } as any),
       ).rejects.toBeInstanceOf(ConflictException);
     });
 
@@ -87,7 +98,10 @@ describe('UsersService (unit)', () => {
         .mockResolvedValueOnce({ id: 'same', firebaseUid: 'uid-123' });
       prisma.client.user.create.mockResolvedValueOnce({ id: 'same' });
 
-      await service.createFromFirebase('uid-123', 'same@example.com', { firstName: 'A', lastName: 'B' } as any);
+      await service.createFromFirebase('uid-123', 'same@example.com', {
+        firstName: 'A',
+        lastName: 'B',
+      } as any);
 
       expect(prisma.client.user.create).toHaveBeenCalled();
     });
@@ -95,10 +109,15 @@ describe('UsersService (unit)', () => {
 
   describe('findByFirebaseUid', () => {
     it('retourne le user trouvé', async () => {
-      prisma.client.user.findUnique.mockResolvedValueOnce({ id: 'u1', firebaseUid: 'uid-1' });
+      prisma.client.user.findUnique.mockResolvedValueOnce({
+        id: 'u1',
+        firebaseUid: 'uid-1',
+      });
       const u = await service.findByFirebaseUid('uid-1');
       expect(u?.id).toBe('u1');
-      expect(prisma.client.user.findUnique).toHaveBeenCalledWith({ where: { firebaseUid: 'uid-1' } });
+      expect(prisma.client.user.findUnique).toHaveBeenCalledWith({
+        where: { firebaseUid: 'uid-1' },
+      });
     });
   });
 
@@ -115,16 +134,26 @@ describe('UsersService (unit)', () => {
       const now = new Date('2025-08-22T12:00:00Z');
 
       expect(prisma.client.appointment.updateMany).toHaveBeenNthCalledWith(1, {
-        where: { staffId: 'u-delete', startAt: { gt: now }, status: { not: 'CANCELLED' as any } },
+        where: {
+          staffId: 'u-delete',
+          startAt: { gt: now },
+          status: { not: 'CANCELLED' as any },
+        },
         data: expect.objectContaining({ status: 'CANCELLED' as any }), // <- seulement status
       });
 
       expect(prisma.client.appointment.updateMany).toHaveBeenNthCalledWith(2, {
-        where: { customerId: 'u-delete', startAt: { gt: now }, status: { not: 'CANCELLED' as any } },
+        where: {
+          customerId: 'u-delete',
+          startAt: { gt: now },
+          status: { not: 'CANCELLED' as any },
+        },
         data: expect.objectContaining({ status: 'CANCELLED' as any }), // <- seulement status
       });
 
-      expect(prisma.client.user.delete).toHaveBeenCalledWith({ where: { id: 'u-delete' } });
+      expect(prisma.client.user.delete).toHaveBeenCalledWith({
+        where: { id: 'u-delete' },
+      });
       expect(deleted.id).toBe('u-delete');
 
       expect(prisma.client.$transaction).toHaveBeenCalledTimes(1);

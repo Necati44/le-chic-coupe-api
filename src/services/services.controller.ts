@@ -1,5 +1,14 @@
 import {
-  Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseGuards,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { ServicesService } from './services.service';
 import { CreateServiceDto } from './dto/create-service.dto';
@@ -35,7 +44,11 @@ export class ServicesController {
   @Post()
   async create(@Body() dto: CreateServiceDto, @Req() req: any) {
     const user = req.appUser;
-    logInfo('services.create', { byUserId: user?.id, role: user?.role, dtoKeys: Object.keys(dto || {}) });
+    logInfo('services.create', {
+      byUserId: user?.id,
+      role: user?.role,
+      dtoKeys: Object.keys(dto || {}),
+    });
     return this.servicesService.create(dto);
   }
 
@@ -43,9 +56,18 @@ export class ServicesController {
   @UseGuards(FirebaseAuthGuard, RolesGuard)
   @Roles(Role.OWNER, Role.STAFF)
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() dto: UpdateServiceDto, @Req() req: any) {
+  async update(
+    @Param('id') id: string,
+    @Body() dto: UpdateServiceDto,
+    @Req() req: any,
+  ) {
     const user = req.appUser;
-    logInfo('services.update', { byUserId: user?.id, role: user?.role, serviceId: id, fields: Object.keys(dto || {}) });
+    logInfo('services.update', {
+      byUserId: user?.id,
+      role: user?.role,
+      serviceId: id,
+      fields: Object.keys(dto || {}),
+    });
     return this.servicesService.update(id, dto);
   }
 
@@ -55,7 +77,11 @@ export class ServicesController {
   @Delete(':id')
   async remove(@Param('id') id: string, @Req() req: any) {
     const user = req.appUser;
-    logInfo('services.remove', { byUserId: user?.id, role: user?.role, serviceId: id });
+    logInfo('services.remove', {
+      byUserId: user?.id,
+      role: user?.role,
+      serviceId: id,
+    });
     return this.servicesService.remove(id);
   }
 }

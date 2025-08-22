@@ -20,7 +20,9 @@ export class PrismaClientExceptionFilter implements ExceptionFilter {
       case 'P2002': {
         // Unique constraint (ex: email)
         const target = (exception.meta as any)?.target;
-        const label = Array.isArray(target) ? target.join(', ') : target ?? 'unique field';
+        const label = Array.isArray(target)
+          ? target.join(', ')
+          : (target ?? 'unique field');
         return res.status(HttpStatus.CONFLICT).json({
           statusCode: HttpStatus.CONFLICT,
           message: `${label} already exists`,

@@ -11,7 +11,7 @@ describe('AuthController (unit)', () => {
 
   beforeEach(() => {
     jest.spyOn(console, 'log').mockImplementation(() => {});
-    
+
     authSvc = {
       loginWithIdToken: jest.fn(),
     };
@@ -101,7 +101,7 @@ describe('AuthController (unit)', () => {
 
   it('me: retourne req.user tel quel', () => {
     const req: any = { user: { uid: 'u1', email: 'e@x' } };
-    const out = controller.me(req as any);
+    const out = controller.me(req);
     expect(out).toEqual({ uid: 'u1', email: 'e@x' });
   });
 });

@@ -1,6 +1,10 @@
 // test/e2e/services-security.e2e-spec.ts
 import { Test } from '@nestjs/testing';
-import { INestApplication, CanActivate, ExecutionContext } from '@nestjs/common';
+import {
+  INestApplication,
+  CanActivate,
+  ExecutionContext,
+} from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../../src/app.module';
 import { ServicesService } from '../../src/services/services.service';
@@ -18,16 +22,22 @@ function authAs(role: Role, id = 'u-test'): CanActivate {
   };
 }
 
-async function bootstrap(role: Role, allowRoleGuard: boolean): Promise<INestApplication> {
+async function bootstrap(
+  role: Role,
+  allowRoleGuard: boolean,
+): Promise<INestApplication> {
   const servicesStub = {
     create: jest.fn().mockResolvedValue({ id: 's-created' }),
   };
 
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
-    .overrideProvider(ServicesService).useValue(servicesStub)
-    .overrideGuard(FirebaseAuthGuard).useValue(authAs(role))
+    .overrideProvider(ServicesService)
+    .useValue(servicesStub)
+    .overrideGuard(FirebaseAuthGuard)
+    .useValue(authAs(role))
     // ⬇️ RolesGuard simplifié: renvoie true/false selon le test
-    .overrideGuard(RolesGuard).useValue({ canActivate: () => allowRoleGuard } as CanActivate)
+    .overrideGuard(RolesGuard)
+    .useValue({ canActivate: () => allowRoleGuard } as CanActivate)
     .compile();
 
   const app = moduleRef.createNestApplication();
@@ -46,7 +56,6 @@ describe('Services Security (E2E)', () => {
 
     // utile si ça retombe pas à 403:
     if (res.status !== 403) {
-      // eslint-disable-next-line no-console
       console.error('Body:', res.body || res.text);
     }
     expect(res.status).toBe(403);
@@ -63,7 +72,6 @@ describe('Services Security (E2E)', () => {
       .send({ name: 'Y', durationMin: 30, priceCents: 2500 });
 
     if (res.status !== 201) {
-      // eslint-disable-next-line no-console
       console.error('Body:', res.body || res.text);
     }
     expect(res.status).toBe(201);

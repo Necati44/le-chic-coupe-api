@@ -1,4 +1,11 @@
-import { IsDateString, IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import {
+  IsDateString,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  Min,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { AppointmentStatus } from '@prisma/client';
 
@@ -19,6 +26,6 @@ export class ListAppointmentsDto {
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) take?: number = 20;
 
   // Tri (par défaut: startAt asc)
-  @IsOptional() @IsString() orderBy?: 'startAt'|'createdAt' = 'startAt';
-  @IsOptional() @IsString() orderDir?: 'asc'|'desc' = 'asc';
+  @IsOptional() @IsString() orderBy?: 'startAt' | 'createdAt' = 'startAt';
+  @IsOptional() @IsString() orderDir?: 'asc' | 'desc' = 'asc';
 }

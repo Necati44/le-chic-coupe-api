@@ -1,4 +1,4 @@
-import { IsISO8601, IsOptional, IsString, IsInt, Min } from 'class-validator';
+import { IsOptional, IsString, IsInt, Min } from 'class-validator';
 
 export class PublicDayQueryDto {
   /** Date du jour à explorer (YYYY-MM-DD) */

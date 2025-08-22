@@ -19,7 +19,7 @@ describe('PublicAvailabilitiesService (unit)', () => {
 
   beforeEach(() => {
     jest.spyOn(console, 'log').mockImplementation(() => {});
-    
+
     prisma = makePrismaMock();
     service = new PublicAvailabilitiesService(prisma as any);
     jest.spyOn(console, 'log').mockImplementation(() => {}); // coupe les logs JSON
@@ -66,7 +66,7 @@ describe('PublicAvailabilitiesService (unit)', () => {
     // Créneaux attendus (durée 30, step 15) : 09:00-09:30, 09:15-09:45, 09:30-10:00 => 3 slots
     expect(out.slots.length).toBe(3);
     // Vérifie que tous les slots appartiennent au bon staff
-    expect(new Set(out.slots.map(s => s.staffId))).toEqual(new Set(['st1']));
+    expect(new Set(out.slots.map((s) => s.staffId))).toEqual(new Set(['st1']));
   });
 
   it('bloque les slots qui chevauchent un RDV existant', async () => {
@@ -104,14 +104,16 @@ describe('PublicAvailabilitiesService (unit)', () => {
     });
 
     // On s’assure que le controller/service passe bien staffId dans le where de findMany :
-    prisma.client.staffAvailability.findMany.mockImplementationOnce((args: any) => {
-      // on vérifie que le where contient staffId = st2
-      expect(args.where).toEqual(expect.objectContaining({ staffId: 'st2' }));
-      // On renvoie des dispos pour st2
-      return Promise.resolve([
-        { id: 'av2', staffId: 'st2', startTime: '13:00', endTime: '14:00' },
-      ]);
-    });
+    prisma.client.staffAvailability.findMany.mockImplementationOnce(
+      (args: any) => {
+        // on vérifie que le where contient staffId = st2
+        expect(args.where).toEqual(expect.objectContaining({ staffId: 'st2' }));
+        // On renvoie des dispos pour st2
+        return Promise.resolve([
+          { id: 'av2', staffId: 'st2', startTime: '13:00', endTime: '14:00' },
+        ]);
+      },
+    );
 
     prisma.client.appointment.findMany.mockResolvedValueOnce([]);
 
@@ -122,7 +124,7 @@ describe('PublicAvailabilitiesService (unit)', () => {
     } as any);
 
     expect(out.slots.length).toBeGreaterThan(0);
-    expect(new Set(out.slots.map(s => s.staffId))).toEqual(new Set(['st2']));
+    expect(new Set(out.slots.map((s) => s.staffId))).toEqual(new Set(['st2']));
   });
 
   it('ajoute bufferMinutes à la durée', async () => {

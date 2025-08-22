@@ -36,7 +36,9 @@ export class AuthService {
 
     // Cookie de session : 1 semaine
     const expiresIn = 1000 * 60 * 60 * 24 * 7;
-    const sessionCookie = await auth().createSessionCookie(idToken, { expiresIn });
+    const sessionCookie = await auth().createSessionCookie(idToken, {
+      expiresIn,
+    });
 
     const existing = await this.users.findByFirebaseUid(decoded.uid);
     if (existing) {

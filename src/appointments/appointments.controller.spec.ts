@@ -1,6 +1,5 @@
 import { ForbiddenException } from '@nestjs/common';
 import { AppointmentsController } from './appointments.controller';
-import { AppointmentsService } from './appointments.service';
 import { Role } from '@prisma/client';
 
 describe('AppointmentsController (unit)', () => {
@@ -9,7 +8,7 @@ describe('AppointmentsController (unit)', () => {
 
   beforeEach(() => {
     jest.spyOn(console, 'log').mockImplementation(() => {});
-    
+
     svc = {
       create: jest.fn(),
       findMany: jest.fn(),
@@ -19,29 +18,42 @@ describe('AppointmentsController (unit)', () => {
       cancel: jest.fn(),
     } as any;
 
-    controller = new AppointmentsController(svc as any);
+    controller = new AppointmentsController(svc);
   });
 
   describe('create', () => {
     it('force customerId pour un CUSTOMER', async () => {
       const req: any = { appUser: { id: 'u-cust', role: Role.CUSTOMER } };
-      const dto: any = { startAt: '2025-08-22T10:00:00Z', endAt: '2025-08-22T11:00:00Z', serviceId: 'svc1' };
+      const dto: any = {
+        startAt: '2025-08-22T10:00:00Z',
+        endAt: '2025-08-22T11:00:00Z',
+        serviceId: 'svc1',
+      };
       svc.create.mockResolvedValueOnce({ id: 'a1' });
 
       const out = await controller.create(dto, req);
 
-      expect(svc.create).toHaveBeenCalledWith(expect.objectContaining({ customerId: 'u-cust' }));
+      expect(svc.create).toHaveBeenCalledWith(
+        expect.objectContaining({ customerId: 'u-cust' }),
+      );
       expect(out).toEqual({ id: 'a1' });
     });
 
     it('ne force pas customerId pour OWNER/STAFF', async () => {
       const req: any = { appUser: { id: 'u-staff', role: Role.STAFF } };
-      const dto: any = { startAt: '2025-08-22T10:00:00Z', endAt: '2025-08-22T11:00:00Z', serviceId: 'svc1', customerId: 'u-x' };
+      const dto: any = {
+        startAt: '2025-08-22T10:00:00Z',
+        endAt: '2025-08-22T11:00:00Z',
+        serviceId: 'svc1',
+        customerId: 'u-x',
+      };
       svc.create.mockResolvedValueOnce({ id: 'a2' });
 
       const out = await controller.create(dto, req);
 
-      expect(svc.create).toHaveBeenCalledWith(expect.objectContaining({ customerId: 'u-x' }));
+      expect(svc.create).toHaveBeenCalledWith(
+        expect.objectContaining({ customerId: 'u-x' }),
+      );
       expect(out).toEqual({ id: 'a2' });
     });
   });
@@ -62,41 +74,71 @@ describe('AppointmentsController (unit)', () => {
   describe('get', () => {
     it('autorise CUSTOMER uniquement sur son propre RDV', async () => {
       const req: any = { appUser: { id: 'u-cust', role: Role.CUSTOMER } };
-      svc.findOne.mockResolvedValueOnce({ id: 'a1', customerId: 'u-cust' } as any);
+      svc.findOne.mockResolvedValueOnce({
+        id: 'a1',
+        customerId: 'u-cust',
+      } as any);
 
       const ok = await controller.get('a1', req);
       expect(ok).toEqual({ id: 'a1', customerId: 'u-cust' });
 
-      svc.findOne.mockResolvedValueOnce({ id: 'a2', customerId: 'other' } as any);
-      await expect(controller.get('a2', req)).rejects.toBeInstanceOf(ForbiddenException);
+      svc.findOne.mockResolvedValueOnce({
+        id: 'a2',
+        customerId: 'other',
+      } as any);
+      await expect(controller.get('a2', req)).rejects.toBeInstanceOf(
+        ForbiddenException,
+      );
     });
   });
 
   describe('update', () => {
     it('refuse CUSTOMER si le RDV ne lui appartient pas', async () => {
       const req: any = { appUser: { id: 'u-cust', role: Role.CUSTOMER } };
-      svc.findOne.mockResolvedValueOnce({ id: 'a2', customerId: 'other' } as any);
+      svc.findOne.mockResolvedValueOnce({
+        id: 'a2',
+        customerId: 'other',
+      } as any);
 
-      await expect(controller.update('a2', { status: 'CONFIRMED' } as any, req)).rejects.toBeInstanceOf(ForbiddenException);
+      await expect(
+        controller.update('a2', { status: 'CONFIRMED' } as any, req),
+      ).rejects.toBeInstanceOf(ForbiddenException);
       expect(svc.update).not.toHaveBeenCalled();
     });
 
     it('autorise CUSTOMER sur son RDV', async () => {
       const req: any = { appUser: { id: 'u-cust', role: Role.CUSTOMER } };
-      svc.findOne.mockResolvedValueOnce({ id: 'a1', customerId: 'u-cust' } as any);
-      svc.update.mockResolvedValueOnce({ id: 'a1', status: 'CONFIRMED' } as any);
+      svc.findOne.mockResolvedValueOnce({
+        id: 'a1',
+        customerId: 'u-cust',
+      } as any);
+      svc.update.mockResolvedValueOnce({
+        id: 'a1',
+        status: 'CONFIRMED',
+      } as any);
 
-      const out = await controller.update('a1', { status: 'CONFIRMED' } as any, req);
+      const out = await controller.update(
+        'a1',
+        { status: 'CONFIRMED' } as any,
+        req,
+      );
       expect(svc.update).toHaveBeenCalledWith('a1', { status: 'CONFIRMED' });
       expect(out).toEqual({ id: 'a1', status: 'CONFIRMED' });
     });
 
     it('autorise STAFF/OWNER sans restriction', async () => {
       const req: any = { appUser: { id: 'u-staff', role: Role.STAFF } };
-      svc.findOne.mockResolvedValueOnce({ id: 'a1', customerId: 'other' } as any);
+      svc.findOne.mockResolvedValueOnce({
+        id: 'a1',
+        customerId: 'other',
+      } as any);
       svc.update.mockResolvedValueOnce({ id: 'a1' } as any);
 
-      const out = await controller.update('a1', { status: 'COMPLETED' } as any, req);
+      const out = await controller.update(
+        'a1',
+        { status: 'COMPLETED' } as any,
+        req,
+      );
       expect(svc.update).toHaveBeenCalledWith('a1', { status: 'COMPLETED' });
       expect(out).toEqual({ id: 'a1' });
     });
@@ -105,16 +147,27 @@ describe('AppointmentsController (unit)', () => {
   describe('cancel', () => {
     it('refuse CUSTOMER si le RDV ne lui appartient pas', async () => {
       const req: any = { appUser: { id: 'u-cust', role: Role.CUSTOMER } };
-      svc.findOne.mockResolvedValueOnce({ id: 'a2', customerId: 'other' } as any);
+      svc.findOne.mockResolvedValueOnce({
+        id: 'a2',
+        customerId: 'other',
+      } as any);
 
-      await expect(controller.cancel('a2', req)).rejects.toBeInstanceOf(ForbiddenException);
+      await expect(controller.cancel('a2', req)).rejects.toBeInstanceOf(
+        ForbiddenException,
+      );
       expect(svc.cancel).not.toHaveBeenCalled();
     });
 
     it('autorise CUSTOMER sur son RDV', async () => {
       const req: any = { appUser: { id: 'u-cust', role: Role.CUSTOMER } };
-      svc.findOne.mockResolvedValueOnce({ id: 'a1', customerId: 'u-cust' } as any);
-      svc.cancel.mockResolvedValueOnce({ id: 'a1', status: 'CANCELLED' } as any);
+      svc.findOne.mockResolvedValueOnce({
+        id: 'a1',
+        customerId: 'u-cust',
+      } as any);
+      svc.cancel.mockResolvedValueOnce({
+        id: 'a1',
+        status: 'CANCELLED',
+      } as any);
 
       const out = await controller.cancel('a1', req);
       expect(svc.cancel).toHaveBeenCalledWith('a1');

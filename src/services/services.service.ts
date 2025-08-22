@@ -31,13 +31,18 @@ export class ServicesService {
   }
 
   async findOne(id: string) {
-    const service = await this.prisma.client.service.findUnique({ where: { id } });
+    const service = await this.prisma.client.service.findUnique({
+      where: { id },
+    });
     if (!service) throw new NotFoundException('Service not found');
     return service;
   }
 
   async update(id: string, dto: UpdateServiceDto) {
-    return await this.prisma.client.service.update({ where: { id }, data: dto });
+    return await this.prisma.client.service.update({
+      where: { id },
+      data: dto,
+    });
   }
 
   async remove(id: string) {

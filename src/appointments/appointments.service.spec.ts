@@ -29,7 +29,7 @@ describe('AppointmentsService (unit)', () => {
 
   beforeEach(() => {
     jest.spyOn(console, 'log').mockImplementation(() => {});
-    
+
     jest.useFakeTimers({ now: new Date('2025-08-22T12:00:00Z') });
     prisma = makePrismaMock();
     service = new AppointmentsService(prisma as any);
@@ -144,7 +144,9 @@ describe('AppointmentsService (unit)', () => {
 
     it('jette NotFound si inexistant', async () => {
       prisma.client.appointment.findUnique.mockResolvedValueOnce(null);
-      await expect(service.findOne('missing')).rejects.toBeInstanceOf(NotFoundException);
+      await expect(service.findOne('missing')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
     });
   });
 
@@ -159,9 +161,14 @@ describe('AppointmentsService (unit)', () => {
     });
 
     it('met à jour partiellement (status seul)', async () => {
-      prisma.client.appointment.update.mockResolvedValueOnce({ id: 'a1', status: AppointmentStatus.CANCELLED });
+      prisma.client.appointment.update.mockResolvedValueOnce({
+        id: 'a1',
+        status: AppointmentStatus.CANCELLED,
+      });
 
-      const out = await service.update('a1', { status: AppointmentStatus.CANCELLED } as any);
+      const out = await service.update('a1', {
+        status: AppointmentStatus.CANCELLED,
+      } as any);
       expect(prisma.client.appointment.update).toHaveBeenCalledWith({
         where: { id: 'a1' },
         data: { status: AppointmentStatus.CANCELLED as any },
@@ -174,19 +181,26 @@ describe('AppointmentsService (unit)', () => {
     it('supprime et renvoie {id, deleted:true}', async () => {
       prisma.client.appointment.delete.mockResolvedValueOnce({ id: 'a1' });
       const out = await service.remove('a1');
-      expect(prisma.client.appointment.delete).toHaveBeenCalledWith({ where: { id: 'a1' } });
+      expect(prisma.client.appointment.delete).toHaveBeenCalledWith({
+        where: { id: 'a1' },
+      });
       expect(out).toEqual({ id: 'a1', deleted: true });
     });
 
     it('jette NotFound si delete échoue', async () => {
       prisma.client.appointment.delete.mockRejectedValueOnce(new Error('nope'));
-      await expect(service.remove('x')).rejects.toBeInstanceOf(NotFoundException);
+      await expect(service.remove('x')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
     });
   });
 
   describe('cancel', () => {
     it('passe le status à CANCELLED', async () => {
-      prisma.client.appointment.update.mockResolvedValueOnce({ id: 'a1', status: AppointmentStatus.CANCELLED });
+      prisma.client.appointment.update.mockResolvedValueOnce({
+        id: 'a1',
+        status: AppointmentStatus.CANCELLED,
+      });
       const out = await service.cancel('a1');
       expect(prisma.client.appointment.update).toHaveBeenCalledWith({
         where: { id: 'a1' },

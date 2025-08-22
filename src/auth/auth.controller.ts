@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, Req, Res, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { Response, Request } from 'express';
 import { FirebaseAuthGuard } from './guards/firebase-auth.guard';
 import { FirebaseLoginDto } from './dto/login.dto';
@@ -10,9 +18,15 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('login')
-  async login(@Body() body: FirebaseLoginDto, @Res({ passthrough: true }) res: Response) {
+  async login(
+    @Body() body: FirebaseLoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const out = await this.authService.loginWithIdToken(body.idToken);
-    logInfo('auth.login', { authenticated: out.authenticated, needsProfile: (out as any).needsProfile ?? null });
+    logInfo('auth.login', {
+      authenticated: out.authenticated,
+      needsProfile: (out as any).needsProfile ?? null,
+    });
 
     if (out.authenticated) {
       // Cookie de session
@@ -34,7 +48,10 @@ export class AuthController {
 
   @Post('logout')
   async logout(@Res({ passthrough: true }) res: Response) {
-    res.clearCookie('session', { path: '/', domain: process.env.COOKIE_DOMAIN || undefined });
+    res.clearCookie('session', {
+      path: '/',
+      domain: process.env.COOKIE_DOMAIN || undefined,
+    });
     return { ok: true };
   }
 

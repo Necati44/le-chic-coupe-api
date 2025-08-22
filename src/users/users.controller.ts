@@ -1,6 +1,16 @@
-import { BadRequestException, Body, ConflictException, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { FirebaseAuthGuard } from 'src/auth/guards/firebase-auth.guard';
 import { FinalizeProfileDto } from 'src/auth/dto/finalize-profile.dto';
@@ -31,15 +41,22 @@ export class UsersController {
 
     const existing = await this.usersService.findByFirebaseUid(decoded.uid);
     if (existing) {
-      logInfo('users.finalize.already_done', { uid: decoded.uid, userId: existing.id });
-      return { needsProfile: false, user: existing };   // ← pas d’exception
+      logInfo('users.finalize.already_done', {
+        uid: decoded.uid,
+        userId: existing.id,
+      });
+      return { needsProfile: false, user: existing }; // ← pas d’exception
     }
 
-    const user = await this.usersService.createFromFirebase(decoded.uid, decoded.email!, dto);
+    const user = await this.usersService.createFromFirebase(
+      decoded.uid,
+      decoded.email!,
+      dto,
+    );
     logInfo('users.finalize.ok', { uid: decoded.uid, userId: user.id });
     return { needsProfile: false, user };
   }
-  
+
   @UseGuards(FirebaseAuthGuard, RolesGuard)
   @Roles(Role.OWNER, Role.STAFF)
   @Get()
@@ -65,7 +82,11 @@ export class UsersController {
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateUserDto, @Req() req: any) {
     const user = req.appUser;
-    logInfo('users.update', { byUserId: user?.id, targetId: id, fields: Object.keys(dto || {}) });
+    logInfo('users.update', {
+      byUserId: user?.id,
+      targetId: id,
+      fields: Object.keys(dto || {}),
+    });
     return this.usersService.update(id, dto);
   }
 

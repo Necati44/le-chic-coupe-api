@@ -22,10 +22,12 @@ dotenv.config();
     ServicesModule,
     StaffAvailabilitiesModule,
     PublicAvailabilitiesModule,
-    ThrottlerModule.forRoot([{
-      ttl: 60, // fenêtre 60s
-      limit: 100, // 100 requêtes / minute / IP
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60, // fenêtre 60s
+        limit: 100, // 100 requêtes / minute / IP
+      },
+    ]),
     AuthModule,
     ...(process.env.NODE_ENV !== 'dev' ? [DevHelperModule] : []),
   ],

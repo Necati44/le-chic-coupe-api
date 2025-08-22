@@ -31,8 +31,11 @@ export class DevHelperService {
     const auth = getAuth();
 
     // S’assurer que l’utilisateur existe (sinon on le crée à la volée)
-    try { await auth.getUser(uid); }
-    catch { await auth.createUser({ uid, emailVerified: true, displayName: uid }); }
+    try {
+      await auth.getUser(uid);
+    } catch {
+      await auth.createUser({ uid, emailVerified: true, displayName: uid });
+    }
 
     // 1) custom token
     const customToken = await auth.createCustomToken(uid);
@@ -45,6 +48,9 @@ export class DevHelperService {
       ),
     );
 
-    return { idToken: resp.data.idToken as string, expiresIn: resp.data.expiresIn as number };
+    return {
+      idToken: resp.data.idToken as string,
+      expiresIn: resp.data.expiresIn as number,
+    };
   }
 }

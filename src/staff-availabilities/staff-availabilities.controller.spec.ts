@@ -9,7 +9,7 @@ describe('StaffAvailabilityController (unit)', () => {
 
   beforeEach(() => {
     jest.spyOn(console, 'log').mockImplementation(() => {});
-    
+
     svc = {
       create: jest.fn(),
       findAll: jest.fn(),
@@ -18,7 +18,9 @@ describe('StaffAvailabilityController (unit)', () => {
       remove: jest.fn(),
       bulkUpsert: jest.fn(),
     };
-    controller = new StaffAvailabilityController(svc as StaffAvailabilitiesService);
+    controller = new StaffAvailabilityController(
+      svc as StaffAvailabilitiesService,
+    );
     jest.spyOn(console, 'log').mockImplementation(() => {}); // coupe logs
   });
 
@@ -34,18 +36,27 @@ describe('StaffAvailabilityController (unit)', () => {
 
       const out = await controller.create(dto, req);
 
-      expect(svc.create).toHaveBeenCalledWith(expect.objectContaining({ staffId: 'u-staff' }));
+      expect(svc.create).toHaveBeenCalledWith(
+        expect.objectContaining({ staffId: 'u-staff' }),
+      );
       expect(out).toEqual({ id: 'd1' });
     });
 
     it('ne force pas staffId pour OWNER', async () => {
       const req: any = { appUser: { id: 'u-owner', role: Role.OWNER } };
-      const dto: any = { staffId: 'u-x', day: 'MON', startTime: '09:00', endTime: '10:00' };
+      const dto: any = {
+        staffId: 'u-x',
+        day: 'MON',
+        startTime: '09:00',
+        endTime: '10:00',
+      };
       svc.create.mockResolvedValueOnce({ id: 'd2' });
 
       const out = await controller.create(dto, req);
 
-      expect(svc.create).toHaveBeenCalledWith(expect.objectContaining({ staffId: 'u-x' }));
+      expect(svc.create).toHaveBeenCalledWith(
+        expect.objectContaining({ staffId: 'u-x' }),
+      );
       expect(out).toEqual({ id: 'd2' });
     });
   });
@@ -54,7 +65,12 @@ describe('StaffAvailabilityController (unit)', () => {
     it('passe la query telle quelle (OWNER/STAFF)', async () => {
       const req: any = { appUser: { id: 'u-staff', role: Role.STAFF } };
       const q: any = { staffId: 'u-staff', day: 'MON', skip: 0, take: 20 };
-      svc.findAll.mockResolvedValueOnce({ items: [], total: 0, skip: 0, take: 20 });
+      svc.findAll.mockResolvedValueOnce({
+        items: [],
+        total: 0,
+        skip: 0,
+        take: 20,
+      });
 
       const out = await controller.findAll(q, req);
 
@@ -72,7 +88,9 @@ describe('StaffAvailabilityController (unit)', () => {
       expect(ok).toEqual({ id: 'd1', staffId: 'u-staff' });
 
       svc.findOne.mockResolvedValueOnce({ id: 'd2', staffId: 'other' });
-      await expect(controller.findOne('d2', req)).rejects.toBeInstanceOf(ForbiddenException);
+      await expect(controller.findOne('d2', req)).rejects.toBeInstanceOf(
+        ForbiddenException,
+      );
     });
   });
 
@@ -81,7 +99,9 @@ describe('StaffAvailabilityController (unit)', () => {
       const req: any = { appUser: { id: 'u-staff', role: Role.STAFF } };
       svc.findOne.mockResolvedValueOnce({ id: 'd1', staffId: 'other' });
 
-      await expect(controller.update('d1', { startTime: '09:00' } as any, req)).rejects.toBeInstanceOf(ForbiddenException);
+      await expect(
+        controller.update('d1', { startTime: '09:00' } as any, req),
+      ).rejects.toBeInstanceOf(ForbiddenException);
       expect(svc.update).not.toHaveBeenCalled();
     });
 
@@ -100,7 +120,11 @@ describe('StaffAvailabilityController (unit)', () => {
       svc.findOne.mockResolvedValueOnce({ id: 'd1', staffId: 'u-staff' });
       svc.update.mockResolvedValueOnce({ id: 'd1', startTime: '10:00' });
 
-      const out = await controller.update('d1', { startTime: '10:00' } as any, req);
+      const out = await controller.update(
+        'd1',
+        { startTime: '10:00' } as any,
+        req,
+      );
       expect(svc.update).toHaveBeenCalledWith('d1', { startTime: '10:00' });
       expect(out).toEqual({ id: 'd1', startTime: '10:00' });
     });
@@ -110,7 +134,11 @@ describe('StaffAvailabilityController (unit)', () => {
       svc.findOne.mockResolvedValueOnce({ id: 'd1', staffId: 'someone' });
       svc.update.mockResolvedValueOnce({ id: 'd1', endTime: '12:00' });
 
-      const out = await controller.update('d1', { endTime: '12:00' } as any, req);
+      const out = await controller.update(
+        'd1',
+        { endTime: '12:00' } as any,
+        req,
+      );
       expect(svc.update).toHaveBeenCalledWith('d1', { endTime: '12:00' });
       expect(out).toEqual({ id: 'd1', endTime: '12:00' });
     });
@@ -121,7 +149,9 @@ describe('StaffAvailabilityController (unit)', () => {
       const req: any = { appUser: { id: 'u-staff', role: Role.STAFF } };
       svc.findOne.mockResolvedValueOnce({ id: 'd1', staffId: 'other' });
 
-      await expect(controller.remove('d1', req)).rejects.toBeInstanceOf(ForbiddenException);
+      await expect(controller.remove('d1', req)).rejects.toBeInstanceOf(
+        ForbiddenException,
+      );
       expect(svc.remove).not.toHaveBeenCalled();
     });
 
@@ -141,7 +171,14 @@ describe('StaffAvailabilityController (unit)', () => {
       const req: any = { appUser: { id: 'u-staff', role: Role.STAFF } };
       const dto: any = {
         staffId: 'other', // sera écrasé
-        slots: [{ staffId: 'other', day: 'MON', startTime: '09:00', endTime: '10:00' }],
+        slots: [
+          {
+            staffId: 'other',
+            day: 'MON',
+            startTime: '09:00',
+            endTime: '10:00',
+          },
+        ],
       };
       svc.bulkUpsert.mockResolvedValueOnce([{ id: 'a' }]);
 
@@ -160,7 +197,9 @@ describe('StaffAvailabilityController (unit)', () => {
       const req: any = { appUser: { id: 'u-owner', role: Role.OWNER } };
       const dto: any = {
         staffId: 's1',
-        slots: [{ staffId: 's1', day: 'TUE', startTime: '10:00', endTime: '11:00' }],
+        slots: [
+          { staffId: 's1', day: 'TUE', startTime: '10:00', endTime: '11:00' },
+        ],
       };
       svc.bulkUpsert.mockResolvedValueOnce([{ id: 'b' }]);
 

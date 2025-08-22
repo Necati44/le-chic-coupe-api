@@ -5,7 +5,7 @@ import { AuthService } from './auth.service';
 import { RolesGuard } from './guards/roles.guard';
 
 @Module({
-  imports: [UsersModule],        // injecte UsersService
+  imports: [UsersModule], // injecte UsersService
   controllers: [AuthController],
   providers: [AuthService, RolesGuard],
   exports: [AuthService, RolesGuard],
