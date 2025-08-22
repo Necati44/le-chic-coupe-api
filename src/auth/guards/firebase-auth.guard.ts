@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { firebaseAdmin } from '../providers/firebase-admin.provider';
 import type { Request } from 'express';
+import { DecodedIdToken } from 'firebase-admin/auth';
 
 @Injectable()
 export class FirebaseAuthGuard implements CanActivate {
@@ -15,7 +16,7 @@ export class FirebaseAuthGuard implements CanActivate {
     const sessionCookie = (req as any).cookies?.session;
 
     try {
-      let decoded: any | null = null;
+      let decoded: DecodedIdToken | null = null;
 
       if (typeof auth === 'string' && auth.startsWith('Bearer ')) {
         const idToken = auth.slice('Bearer '.length);

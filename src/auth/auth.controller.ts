@@ -47,7 +47,7 @@ export class AuthController {
   }
 
   @Post('logout')
-  async logout(@Res({ passthrough: true }) res: Response) {
+  logout(@Res({ passthrough: true }) res: Response) {
     res.clearCookie('session', {
       path: '/',
       domain: process.env.COOKIE_DOMAIN || undefined,
@@ -57,7 +57,7 @@ export class AuthController {
 
   @UseGuards(FirebaseAuthGuard)
   @Get('me')
-  me(@Req() req: Request) {
-    return (req as any).user;
+  me(@Req() req: Request): unknown {
+    return (req as any).user as unknown;
   }
 }
