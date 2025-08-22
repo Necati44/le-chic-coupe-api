@@ -4,6 +4,9 @@
 /build
 /tmp
 
+# Jest
+/coverage
+
 # Logs
 logs
 *.log
@@ -22,3 +25,6 @@ lerna-debug.log*
 # temp directory
 .temp
 .tmp
+
+/generated/prisma
+firebase-service-account.json

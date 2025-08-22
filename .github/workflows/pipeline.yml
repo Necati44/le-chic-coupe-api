@@ -1,0 +1,85 @@
+name: CI & Release
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]   # tests + release
+    # tags: [ 'v*.*.*' ] # optionnel si tu veux aussi déclencher sur tags
+
+jobs:
+  test:
+    name: Lint, Typecheck, Archi, Unit & E2E
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Prisma generate
+        run: npx prisma generate
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: ESLint
+        run: npm run lint
+        env:
+          CI_LINT_LOOSE: '1'
+
+      - name: Dependency Cruiser
+        run: npm run depcruise
+
+      - name: Unit tests (coverage)
+        run: npm run test:unit -- --coverage
+
+      - name: E2E tests
+        run: npm run test:e2e
+        env:
+          NODE_ENV: test
+          # DATABASE_URL: ${{ secrets.DATABASE_URL_TEST }} # si tu en as besoin
+          # FIREBASE_AUTH_EMULATOR_HOST: 127.0.0.1:9099    # pas utile si tu stubs tout
+
+  release:
+    name: Semantic Release
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Prisma generate
+        run: npx prisma generate
+
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
