@@ -45,7 +45,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  firebaseUid  String?  @unique       // lien fort vers Firebase Auth
+  firebaseUid  String  @unique       // lien fort vers Firebase Auth
   email        String  @unique
   phone        String? @db.VarChar(32)
   firstName    String
@@ -89,10 +89,10 @@ model Appointment {
   service   Service @relation(fields: [serviceId], references: [id])
 
   customerId String
-  customer   User   @relation("CustomerAppointments", fields: [customerId], references: [id])
+  customer   User   @relation("CustomerAppointments", fields: [customerId], references: [id], onDelete: SetNull)
 
   staffId String? // optionnel : parfois pas encore assigné
-  staff   User?   @relation("StaffAppointments", fields: [staffId], references: [id])
+  staff   User?   @relation("StaffAppointments", fields: [staffId], references: [id], onDelete: SetNull)
 
   // Index utiles pour recherche planning
   @@index([startAt])
@@ -108,7 +108,7 @@ model StaffAvailability {
   updatedAt DateTime @updatedAt
 
   staffId String
-  staff   User   @relation(fields: [staffId], references: [id])
+  staff   User   @relation(fields: [staffId], references: [id], onDelete: Cascade)
 
   day       Weekday
   startTime String // "09:00" (simple pour MVP)

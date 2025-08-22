@@ -20,7 +20,7 @@ export class AppointmentsService {
     if (new Date(dto.endAt) <= new Date(dto.startAt)) {
       throw new BadRequestException('endAt must be after startAt');
     }
-    return this.prisma.appointment.create({
+    return this.prisma.client.appointment.create({
       data: {
         startAt: new Date(dto.startAt),
         endAt: new Date(dto.endAt),
@@ -52,8 +52,8 @@ export class AppointmentsService {
       [q.orderBy ?? 'startAt']: q.orderDir ?? 'asc',
     };
 
-    const [items, total] = await this.prisma.$transaction([
-      this.prisma.appointment.findMany({
+    const [items, total] = await this.prisma.client.$transaction([
+      this.prisma.client.appointment.findMany({
         where,
         orderBy,
         skip: q.skip ?? 0,
@@ -64,14 +64,14 @@ export class AppointmentsService {
           staff: { select: { id: true, firstName: true, lastName: true } },
         },
       }),
-      this.prisma.appointment.count({ where }),
+      this.prisma.client.appointment.count({ where }),
     ]);
 
     return { items, total };
   }
 
   async findOne(id: string) {
-    const appt = await this.prisma.appointment.findUnique({
+    const appt = await this.prisma.client.appointment.findUnique({
       where: { id },
       include: {
         service: true,
@@ -89,7 +89,7 @@ export class AppointmentsService {
         throw new BadRequestException('endAt must be after startAt');
       }
     }
-    return this.prisma.appointment.update({
+    return this.prisma.client.appointment.update({
       where: { id },
       data: {
         ...(dto.startAt && { startAt: new Date(dto.startAt) }),
@@ -102,10 +102,10 @@ export class AppointmentsService {
     });
   }
 
-  // “Suppression” dure (pour la démo). Pour un vrai produit, préférer un statut CANCELLED.
+  // “Suppression” dure (pour la démo).
   async remove(id: string) {
     try {
-      await this.prisma.appointment.delete({ where: { id } });
+      await this.prisma.client.appointment.delete({ where: { id } });
       return { id, deleted: true };
     } catch {
       throw new NotFoundException('Appointment not found');
@@ -114,7 +114,7 @@ export class AppointmentsService {
 
   // Helper pratique : annuler
   async cancel(id: string) {
-    return this.prisma.appointment.update({
+    return this.prisma.client.appointment.update({
       where: { id },
       data: { status: AppointmentStatus.CANCELLED as any },
     });

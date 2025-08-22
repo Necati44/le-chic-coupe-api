@@ -9,7 +9,7 @@ export class ServicesService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(dto: CreateServiceDto) {
-    return this.prisma.service.create({ data: dto });
+    return this.prisma.client.service.create({ data: dto });
   }
 
   async findAll(q: QueryServiceDto) {
@@ -17,32 +17,32 @@ export class ServicesService {
       ? { name: { contains: q.search, mode: 'insensitive' as const } }
       : undefined;
 
-    const [items, total] = await this.prisma.$transaction([
-      this.prisma.service.findMany({
+    const [items, total] = await this.prisma.client.$transaction([
+      this.prisma.client.service.findMany({
         where,
         skip: q.skip,
         take: q.take,
         orderBy: { [q.orderBy!]: q.orderDir },
       }),
-      this.prisma.service.count({ where }),
+      this.prisma.client.service.count({ where }),
     ]);
 
     return { items, total, skip: q.skip, take: q.take };
   }
 
   async findOne(id: string) {
-    const service = await this.prisma.service.findUnique({ where: { id } });
+    const service = await this.prisma.client.service.findUnique({ where: { id } });
     if (!service) throw new NotFoundException('Service not found');
     return service;
   }
 
   async update(id: string, dto: UpdateServiceDto) {
-    return await this.prisma.service.update({ where: { id }, data: dto });
+    return await this.prisma.client.service.update({ where: { id }, data: dto });
   }
 
   async remove(id: string) {
     // suppression dure (pas de deletedAt dans ton modèle)
-    await this.prisma.service.delete({ where: { id } });
+    await this.prisma.client.service.delete({ where: { id } });
     return { id, deleted: true };
   }
 }

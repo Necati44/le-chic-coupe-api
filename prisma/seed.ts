@@ -1,36 +1,66 @@
 import { PrismaClient, Role, AppointmentStatus, Weekday } from '@prisma/client';
 const prisma = new PrismaClient();
 
+// UIDs fixes pour aligner DB <-> Auth Emulator
+const OWNER_UID    = 'uid-owner-001';
+const STAFF_UID    = 'uid-staff-001';
+const CUSTOMER_UID = 'uid-customer-001';
+
 async function main() {
   const owner = await prisma.user.upsert({
-    where: { email: 'owner@chic-coupe.fr' },
-    update: {},
-    create: {
-      email: 'owner@chic-coupe.fr',
-      firstName: 'Lina',
-      lastName: 'Durand',
+    where: { firebaseUid: OWNER_UID }, // firebaseUid est unique => idempotent
+    update: {
+      email: 'owner@lechiccoupe.fr',
+      firstName: 'Owner',
+      lastName: 'One',
       role: Role.OWNER,
-      phone: '0600000000',
+      phone: '+33100000000',
+    },
+    create: {
+      firebaseUid: OWNER_UID,
+      email: 'owner@lechiccoupe.fr',
+      firstName: 'Owner',
+      lastName: 'One',
+      role: Role.OWNER,
+      phone: '+33100000000',
     },
   });
 
-  const staff = await prisma.user.create({
-    data: {
-      email: 'coiffeur@chic-coupe.fr',
-      firstName: 'Alex',
-      lastName: 'Martin',
+  const staff = await prisma.user.upsert({
+    where: { firebaseUid: STAFF_UID },
+    update: {
+      email: 'staff@lechiccoupe.fr',
+      firstName: 'Staff',
+      lastName: 'Member',
       role: Role.STAFF,
-      phone: '0611111111',
+      phone: '+33100000001',
+    },
+    create: {
+      firebaseUid: STAFF_UID,
+      email: 'staff@lechiccoupe.fr',
+      firstName: 'Staff',
+      lastName: 'Member',
+      role: Role.STAFF,
+      phone: '+33100000001',
     },
   });
 
-  const customer = await prisma.user.create({
-    data: {
-      email: 'client@test.fr',
-      firstName: 'Emma',
-      lastName: 'R.',
+  const customer = await prisma.user.upsert({
+    where: { firebaseUid: CUSTOMER_UID },
+    update: {
+      email: 'customer@lechiccoupe.fr',
+      firstName: 'Customer',
+      lastName: 'One',
       role: Role.CUSTOMER,
-      phone: '0622222222',
+      phone: '+33100000002',
+    },
+    create: {
+      firebaseUid: CUSTOMER_UID,
+      email: 'customer@lechiccoupe.fr',
+      firstName: 'Customer',
+      lastName: 'One',
+      role: Role.CUSTOMER,
+      phone: '+33100000002',
     },
   });
 

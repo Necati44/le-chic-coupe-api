@@ -39,7 +39,7 @@ export class StaffAvailabilitiesService {
     }
 
     // 🔎 overlap DB : même staff + même day
-    const conflict = await this.prisma.staffAvailability.findFirst({
+    const conflict = await this.prisma.client.staffAvailability.findFirst({
         where: {
         staffId: dto.staffId,
         day: dto.day,
@@ -53,7 +53,7 @@ export class StaffAvailabilitiesService {
         );
     }
 
-    return this.prisma.staffAvailability.create({ data: dto });
+    return this.prisma.client.staffAvailability.create({ data: dto });
   }
 
 
@@ -62,27 +62,27 @@ export class StaffAvailabilitiesService {
       staffId: q.staffId,
       day: q.day,
     };
-    const [items, total] = await this.prisma.$transaction([
-      this.prisma.staffAvailability.findMany({
+    const [items, total] = await this.prisma.client.$transaction([
+      this.prisma.client.staffAvailability.findMany({
         where,
         skip: q.skip,
         take: q.take,
         orderBy: [{ staffId: 'asc' }, { day: 'asc' }, { startTime: 'asc' }],
       }),
-      this.prisma.staffAvailability.count({ where }),
+      this.prisma.client.staffAvailability.count({ where }),
     ]);
     return { items, total, skip: q.skip ?? 0, take: q.take ?? 20 };
   }
 
   async findOne(id: string) {
-    const item = await this.prisma.staffAvailability.findUnique({ where: { id } });
+    const item = await this.prisma.client.staffAvailability.findUnique({ where: { id } });
     if (!item) throw new NotFoundException('Availability not found');
     return item;
   }
 
   async update(id: string, dto: UpdateStaffAvailabilityDto) {
     // Charger l’existant pour connaître staffId/day si absents du DTO
-    const current = await this.prisma.staffAvailability.findUnique({ where: { id } });
+    const current = await this.prisma.client.staffAvailability.findUnique({ where: { id } });
     if (!current) throw new NotFoundException('Availability not found');
 
     const day = dto.day ?? (current as any).day;
@@ -94,7 +94,7 @@ export class StaffAvailabilitiesService {
     }
 
     // 🔎 overlap DB, en excluant l’enregistrement courant
-    const conflict = await this.prisma.staffAvailability.findFirst({
+    const conflict = await this.prisma.client.staffAvailability.findFirst({
         where: {
         id: { not: id },
         staffId: current.staffId,
@@ -110,7 +110,7 @@ export class StaffAvailabilitiesService {
     }
 
     try {
-        return await this.prisma.staffAvailability.update({
+        return await this.prisma.client.staffAvailability.update({
         where: { id },
         data: { ...dto, day, startTime, endTime },
         });
@@ -122,7 +122,7 @@ export class StaffAvailabilitiesService {
 
   async remove(id: string) {
     try {
-      await this.prisma.staffAvailability.delete({ where: { id } });
+      await this.prisma.client.staffAvailability.delete({ where: { id } });
       return { id, deleted: true };
     } catch (e: any) {
       if (e?.code === 'P2025') throw new NotFoundException('Availability not found');
@@ -155,7 +155,7 @@ export class StaffAvailabilitiesService {
     }
 
     // Remplacement atomique
-    return this.prisma.$transaction(async (tx) => {
+    return this.prisma.client.$transaction(async (tx) => {
         await tx.staffAvailability.deleteMany({ where: { staffId: dto.staffId } });
         if (dto.slots.length === 0) return [];
 
