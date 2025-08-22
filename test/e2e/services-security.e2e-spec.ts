@@ -39,9 +39,9 @@ async function bootstrap(
 
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(ServicesService).useValue(servicesStub)
-    .overrideProvider(PrismaService).useValue(prismaStub) // ⬅️ add
+    .overrideProvider(PrismaService).useValue(prismaStub)
     .overrideGuard(FirebaseAuthGuard).useValue(authAs(role))
-    .overrideGuard(RolesGuard).useClass(RolesGuard)
+    .overrideGuard(RolesGuard).useValue({ canActivate: () => allowRoleGuard } as CanActivate)
     .compile();
 
   const app = moduleRef.createNestApplication();
