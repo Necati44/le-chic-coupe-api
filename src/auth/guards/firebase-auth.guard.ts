@@ -26,6 +26,8 @@ export class FirebaseAuthGuard implements CanActivate {
         email: decoded.email ?? null,
         roles: decoded.roles ?? [],
       };
+      (req as any).firebase = decoded; // alias "nouveau"
+
       return true;
     } catch {
       throw new UnauthorizedException('Invalid auth token');

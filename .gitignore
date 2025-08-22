@@ -4,6 +4,9 @@
 /build
 /tmp
 
+# Jest
+/coverage
+
 # Logs
 logs
 *.log

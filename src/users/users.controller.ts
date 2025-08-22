@@ -1,4 +1,4 @@
-import { Body, ConflictException, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, ConflictException, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -9,6 +9,7 @@ import { Roles } from 'src/auth/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import { logInfo } from '@common/logging/logger';
 import { AllowSelf } from 'src/auth/decorators/allow-self.decorator';
+import { DecodedIdToken } from 'firebase-admin/auth';
 
 @Controller('users')
 export class UsersController {
@@ -22,21 +23,21 @@ export class UsersController {
   // L’utilisateur appelle ceci après le formulaire de finalisation
   @UseGuards(FirebaseAuthGuard)
   @Post('me/finalize')
-  async finalize(@Body() dto: FinalizeProfileDto, req: any) {
-    const decoded = req.firebase as import('firebase-admin/auth').DecodedIdToken;
+  async finalize(@Body() dto: FinalizeProfileDto, @Req() req: any) {
+    const decoded = (req.firebase ?? req.user) as DecodedIdToken | undefined;
+    if (!decoded) throw new BadRequestException('missing_token');
+
     logInfo('users.finalize.start', { uid: decoded.uid, email: decoded.email });
 
-    // Si l’utilisateur existe déjà, éviter double création
     const existing = await this.usersService.findByFirebaseUid(decoded.uid);
     if (existing) {
       logInfo('users.finalize.already_done', { uid: decoded.uid, userId: existing.id });
-      throw new ConflictException('Profile already finalized.');
+      return { needsProfile: false, user: existing };   // ← pas d’exception
     }
 
-    const emailFromToken = decoded.email!; // déjà validé par le guard
-    const user = await this.usersService.createFromFirebase(decoded.uid, emailFromToken, dto);
+    const user = await this.usersService.createFromFirebase(decoded.uid, decoded.email!, dto);
     logInfo('users.finalize.ok', { uid: decoded.uid, userId: user.id });
-    return { user, needsProfile: false };
+    return { needsProfile: false, user };
   }
   
   @UseGuards(FirebaseAuthGuard, RolesGuard)

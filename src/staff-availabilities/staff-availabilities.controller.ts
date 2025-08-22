@@ -82,11 +82,24 @@ export class StaffAvailabilityController {
   @Put('bulk')
   async bulkUpsert(@Body() dto: BulkUpsertStaffAvailabilityDto, @Req() req: any) {
     const user = req.appUser;
-    // STAFF: bulk uniquement sur lui-même
-    if (user.role === Role.STAFF) {
-      (dto as any).staffId = user.id;
-    }
-    logInfo('staffAvailability.bulkUpsert', { byUserId: user.id, role: user.role, staffId: (dto as any).staffId });
-    return this.service.bulkUpsert(dto);
+
+    // STAFF: bulk uniquement sur lui-même (force aussi les slots)
+    const normalized: BulkUpsertStaffAvailabilityDto =
+      user.role === Role.STAFF
+        ? {
+            ...dto,
+            staffId: user.id,
+            slots: (dto.slots ?? []).map((s) => ({ ...s, staffId: user.id })),
+          }
+        : dto;
+
+    logInfo('staffAvailability.bulkUpsert', {
+      byUserId: user.id,
+      role: user.role,
+      staffId: normalized.staffId,
+    });
+
+    return this.service.bulkUpsert(normalized);
   }
+
 }
