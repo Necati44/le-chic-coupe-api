@@ -90,7 +90,7 @@ describe('AuthController (unit)', () => {
 
   it('logout: clearCookie + {ok:true}', async () => {
     const res: any = { clearCookie: jest.fn() };
-    const payload = await controller.logout(res);
+    const payload = controller.logout(res);
 
     expect(res.clearCookie).toHaveBeenCalledWith(
       'session',
