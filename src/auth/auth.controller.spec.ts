@@ -88,7 +88,7 @@ describe('AuthController (unit)', () => {
     expect(payload).toEqual({ authenticated: false, reason: 'no_email' });
   });
 
-  it('logout: clearCookie + {ok:true}', async () => {
+  it('logout: clearCookie + {ok:true}', () => {
     const res: any = { clearCookie: jest.fn() };
     const payload = controller.logout(res);
 
