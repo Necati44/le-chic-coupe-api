@@ -2,7 +2,7 @@ name: CI & Release
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [ main ]   # tests
   push:
     branches: [ main ]   # tests + release + docker
 
