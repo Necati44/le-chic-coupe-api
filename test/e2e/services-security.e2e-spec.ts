@@ -11,6 +11,7 @@ import { ServicesService } from '../../src/services/services.service';
 import { FirebaseAuthGuard } from '../../src/auth/guards/firebase-auth.guard';
 import { RolesGuard } from '../../src/auth/guards/roles.guard';
 import { Role } from '@prisma/client';
+import { PrismaService } from '@prisma/prisma.service';
 
 function authAs(role: Role, id = 'u-test'): CanActivate {
   return {
@@ -30,14 +31,17 @@ async function bootstrap(
     create: jest.fn().mockResolvedValue({ id: 's-created' }),
   };
 
+  const prismaStub: Partial<PrismaService> = {
+    client: { $connect: jest.fn(), $disconnect: jest.fn() } as any,
+    onModuleInit: jest.fn(),
+    onModuleDestroy: jest.fn(),
+  };
+
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
-    .overrideProvider(ServicesService)
-    .useValue(servicesStub)
-    .overrideGuard(FirebaseAuthGuard)
-    .useValue(authAs(role))
-    // ⬇️ RolesGuard simplifié: renvoie true/false selon le test
-    .overrideGuard(RolesGuard)
-    .useValue({ canActivate: () => allowRoleGuard } as CanActivate)
+    .overrideProvider(ServicesService).useValue(servicesStub)
+    .overrideProvider(PrismaService).useValue(prismaStub) // ⬅️ add
+    .overrideGuard(FirebaseAuthGuard).useValue(authAs(role))
+    .overrideGuard(RolesGuard).useClass(RolesGuard)
     .compile();
 
   const app = moduleRef.createNestApplication();

@@ -4,6 +4,7 @@ import * as request from 'supertest';
 import { AppModule } from '../../src/app.module';
 import { ServicesService } from '../../src/services/services.service';
 import { RolesGuard } from '../../src/auth/guards/roles.guard';
+import { PrismaService } from '@prisma/prisma.service';
 
 describe('Services (PUBLIC) E2E', () => {
   let app: INestApplication;
@@ -21,14 +22,18 @@ describe('Services (PUBLIC) E2E', () => {
       findOne: jest.fn().mockResolvedValue({ id: 's1', name: 'Coupe' }),
     };
 
+    const prismaStub: Partial<PrismaService> = {
+      client: { $connect: jest.fn(), $disconnect: jest.fn() } as any,
+      onModuleInit: jest.fn(),
+      onModuleDestroy: jest.fn(),
+    };
+
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
     })
-      .overrideProvider(ServicesService)
-      .useValue(servicesStub)
-      // ✅ évite l’injection UsersService dans RolesGuard
-      .overrideGuard(RolesGuard)
-      .useValue({ canActivate: () => true } as CanActivate)
+      .overrideProvider(ServicesService).useValue(servicesStub)
+      .overrideProvider(PrismaService).useValue(prismaStub)
+      .overrideGuard(RolesGuard).useValue({ canActivate: () => true } as CanActivate)
       .compile();
 
     app = moduleRef.createNestApplication();
