@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -20,25 +21,42 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import { logInfo } from '../common/logging/logger';
+import { UsersService } from 'src/users/users.service';
 
 @Controller('appointments')
 @UseGuards(FirebaseAuthGuard) // auth obligatoire sur tout le contrôleur
 export class AppointmentsController {
-  constructor(private readonly appointmentsService: AppointmentsService) {}
+  constructor(
+    private readonly appointmentsService: AppointmentsService,
+    private readonly usersService: UsersService,
+  ) {}
 
-  @UseGuards(RolesGuard)
+  @UseGuards(FirebaseAuthGuard)
   @Post()
   async create(@Body() dto: CreateAppointmentDto, @Req() req: any) {
-    const user = req.appUser;
-    // CLIENT : ne peut créer que pour lui-même
-    if (user.role === Role.CUSTOMER) {
-      (dto as any).customerId = user.id;
+    // 1) Sécuriser l'accès à l'user courant depuis le token
+    const uid: string | undefined = req?.user?.uid;
+    if (!uid) throw new BadRequestException('Missing auth uid');
+
+    const current = await this.usersService.findByFirebaseUid(uid).catch(() => null);
+    if (!current) throw new BadRequestException('User not found');
+
+    // 2) Règle d’autorisations :
+    //    - OWNER / STAFF : peuvent créer pour n’importe quel client (ex: prise de RDV au comptoir)
+    //    - CUSTOMER     : ne peut créer QUE pour lui-même
+    const isStaffOrOwner = current.role === Role.OWNER || current.role === Role.STAFF;
+
+    if (!dto.customerId) {
+      // si customerId absent et que c'est un client : on force son id
+      if (!isStaffOrOwner) dto.customerId = current.id;
+      else throw new BadRequestException('customerId is required for staff/owner');
     }
-    logInfo('appointments.create', {
-      byUserId: user.id,
-      role: user.role,
-      dtoKeys: Object.keys(dto || {}),
-    });
+
+    if (!isStaffOrOwner && dto.customerId !== current.id) {
+      throw new ForbiddenException('customerId must match the authenticated user');
+    }
+
+    // 3) Déléguer au service
     return this.appointmentsService.create(dto);
   }
 

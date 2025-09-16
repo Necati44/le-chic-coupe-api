@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { AppointmentStatus, User } from '@prisma/client';
+import { AppointmentStatus, Role, User } from '@prisma/client';
 import { FinalizeProfileDto } from 'src/auth/dto/finalize-profile.dto';
 
 @Injectable()
@@ -35,6 +35,20 @@ export class UsersService {
     if (!user) throw new NotFoundException('User not found');
     return user;
   }
+
+  async findByRoles(roles: Role[]) {
+  return this.prisma.client.user.findMany({
+    where: { role: { in: roles } },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      role: true,
+    },
+    orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
+  });
+}
 
   async update(id: string, dto: UpdateUserDto) {
     return await this.prisma.client.user.update({

@@ -66,6 +66,23 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
+  @Get('staff')
+async listStaff() {
+  const list = await this.usersService.findByRoles([Role.STAFF, Role.OWNER]); // OWNER inclus si tu veux qu’il apparaisse
+  logInfo('users.staff', { count: list.length });
+
+  // Réponse normalisée pour le front
+  return {
+    items: list.map((u) => ({
+      id: u.id,
+      name:
+        [u.firstName, u.lastName].filter(Boolean).join(' ') ||
+        u.email,
+      role: u.role,
+    })),
+  };
+}
+
   @UseGuards(FirebaseAuthGuard, RolesGuard)
   @AllowSelf() // autorise GET /users/:id pour soi-même
   @Roles(Role.OWNER, Role.STAFF)
@@ -98,5 +115,25 @@ export class UsersController {
     const user = req.appUser;
     logInfo('users.remove', { byUserId: user?.id, targetId: id });
     return this.usersService.remove(id);
+  }
+
+  @UseGuards(FirebaseAuthGuard)
+  @Get('me')
+  async me(@Req() req: any) {
+    const uid: string | undefined = req?.user?.uid; // uid ajouté par le guard
+    if (!uid) {
+      // au besoin, lance une 401/400 explicite
+      return { error: 'missing_uid' };
+    }
+    const u = await this.usersService.findByFirebaseUid(uid);
+    return {
+      id: u?.id,                 // ⬅️ ID Prisma (celui qu’on veut côté front)
+      firebaseUid: u?.firebaseUid,
+      email: u?.email,
+      firstName: u?.firstName,
+      lastName: u?.lastName,
+      role: u?.role,
+      phone: u?.phone,
+    };
   }
 }
