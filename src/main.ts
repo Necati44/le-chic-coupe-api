@@ -9,7 +9,10 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   // CORS : limite au domaine du front
   app.enableCors({
-    origin: ['https://www.lechiccoupe.fr', 'https://ton-projet.vercel.app'],
+    origin: ['https://www.lechiccoupe.fr',
+      'https://ton-projet.vercel.app',
+      'http://localhost:3000',
+      'http://localhost:3001'],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     credentials: false,
   });
